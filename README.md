@@ -40,10 +40,6 @@ client-api/
 - **cert-manager** for Let's Encrypt certificates
 - **Jenkins** for CI/CD pipeline
 
-```
-
-```
-
 ## ⚡ Features
 
 - `/health` endpoint for health checks.
@@ -55,20 +51,10 @@ client-api/
   - **ClusterIssuer** for Let's Encrypt certificates
 - CI/CD pipeline to build Docker image, push to ECR, and deploy manifests to Kubernetes.
 
-```
-
-```
-
 1. **Create an EKS cluster using `eksctl`:**
 
 ```bash
 eksctl create cluster -f cluster.yaml
-```
-
-```
-cluster.yaml contains cluster name, region, node groups, and other configurations.
-
-This command creates the EKS cluster, VPC, subnets, and nodegroups automatically.
 ```
 
 2. **Install the AWS Load Balancer Controller:**
@@ -78,3 +64,24 @@ kubectl apply -k "github.com/aws/eks-charts/stable/aws-load-balancer-controller/
 helm repo add eks https://aws.github.io/eks-charts
 helm install aws-load-balancer-controller eks/aws-load-balancer-controller -n kube-system --set clusterName=<cluster-name> --set serviceAccount.create=false --set region=<region> --set vpcId=<vpc-id> --set image.tag=v2.4.7
 ```
+
+3. **Install cert-manager for Let's Encrypt TLS:**
+
+```bash
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.12.0/cert-manager.yaml
+```
+
+4. **Apply Kubernetes manifests:**
+
+```bash
+kubectl apply -f k8s/mongodb.yaml
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/cluster-issuer.yaml
+kubectl apply -f k8s/ingress.yaml
+```
+
+5. **Jenkins CI/CD Pipeline:**
+
+- Build Docker image and push to AWS ECR.
+
+- Apply Kubernetes manifests using kubectl through Jenkins.
