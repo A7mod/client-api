@@ -54,6 +54,24 @@ client-api/
 1. **Create an EKS cluster using `eksctl`:**
 
 ```bash
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: clients-api-cluster
+  region: us-east-1
+
+nodeGroups:
+  - name: ng-clients-api
+    instanceType: t3g.medium
+    desiredCapacity: 2
+    ssh:
+      allow: true
+      publicKeyName: my-keypair
+
+```
+
+```bash
 eksctl create cluster -f cluster.yaml
 ```
 
@@ -78,6 +96,8 @@ kubectl apply -f k8s/mongodb.yaml
 kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/cluster-issuer.yaml
 kubectl apply -f k8s/ingress.yaml
+kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/secret.yaml
 ```
 
 5. **Jenkins CI/CD Pipeline:**
@@ -85,3 +105,33 @@ kubectl apply -f k8s/ingress.yaml
 - Build Docker image and push to AWS ECR.
 
 - Apply Kubernetes manifests using kubectl through Jenkins.
+
+# 🐳 Dockerfile
+
+- Purpose: Builds the Clients API container image.
+
+- How it works:
+
+1. Builder stage: Compiles the Go application (main.go) into a binary.
+
+2. Final stage: Copies the binary into a minimal Alpine image for smaller size and faster startup.
+
+- Exposed port: 8080 (used by the API).
+
+- Outcome: Produces a Docker image ready to be pushed to AWS ECR and deployed to Kubernetes.
+
+# ⚙️ Jenkinsfile
+
+- Purpose: Automates the CI/CD pipeline for the Clients API.
+
+- Stages:
+
+1. Checkout: Pulls code from GitHub.
+
+2. Build: Builds the Docker image for the Go application.
+
+3. Push: Pushes the Docker image to AWS ECR.
+
+4. Deploy: Applies Kubernetes manifests (kubectl apply -f k8s/) to deploy/update the application on EKS.
+
+- Outcome: Fully automates the flow from code → image → deployment, ensuring consistent and repeatable deployments.
