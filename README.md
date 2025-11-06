@@ -8,6 +8,7 @@ The API exposes endpoints for health checks and retrieving client counts from th
 
 ## 📁 Repository Structure
 
+```
 client-api/
 │
 ├── api/
@@ -37,7 +38,7 @@ client-api/
 - **cert-manager** for Let's Encrypt certificates
 - **Jenkins** for CI/CD pipeline
 
----
+```
 
 ## ⚡ Features
 
