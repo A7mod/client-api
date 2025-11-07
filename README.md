@@ -114,13 +114,18 @@ kubectl apply -f k8s/secret.yaml
 - Docker Pipeline
 - AnsiColor
 - Pipeline Utility Steps
-- Required Jenkins Credentials:
+
+# Required Jenkins Credentials:
+
 - aws-ecr: AWS credentials
 - slack-token: Slack integration token
 - Environment Variables to Set:
 - AWS_ACCOUNT_ID: Your AWS account ID
 - Update cluster names in deployToKubernetes() function
+
+```
 - This pipeline is now enterprise-grade and follows DevOps best practices!
+```
 
 # 🐳 Dockerfile
 
