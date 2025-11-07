@@ -129,19 +129,22 @@ kubectl apply -f k8s/secret.yaml
 
 # 🐳 Dockerfile
 
-- Purpose: Builds the Clients API container image.
+The Dockerfile uses a **multi-stage build** to produce a small, secure, and production-ready image for the `clients-api` Go application:
 
-- How it works:
+1. **Stage 1 – Build Stage**
 
-1. Builder stage: Compiles the Go application (main.go) into a binary.
+   - Uses `golang:1.21-alpine` as the builder.
+   - Copies `go.mod` and `go.sum` first to leverage layer caching for dependencies.
+   - Copies the application source code and builds an optimized **static binary** with versioning information injected via build arguments (`BUILD_VERSION`, `GIT_COMMIT`, `BUILD_DATE`).
+   - Produces a statically linked, minimal `clients-api` binary.
 
-2. Final stage: Copies the binary into a minimal Alpine image for smaller size and faster startup.
+2. **Stage 2 – Runtime Stage**
 
-- Exposed port: 8080 (used by the API).'
-
-- Has a non-root user making all changes for security purpose.
-
-- Outcome: Produces a Docker image ready to be pushed to AWS ECR and deployed to Kubernetes.
+   - Uses a lightweight `alpine:3.19` image for runtime.
+   - Creates a **non-root user** for security.
+   - Copies the compiled binary from the builder stage with proper ownership.
+   - Sets the working directory and ensures the application runs as the non-root user.
+   - Specifies the default command to run the application: `./clients-api`.
 
 # ⚙️ Jenkinsfile
 
