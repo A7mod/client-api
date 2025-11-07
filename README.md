@@ -137,22 +137,43 @@ kubectl apply -f k8s/secret.yaml
 
 2. Final stage: Copies the binary into a minimal Alpine image for smaller size and faster startup.
 
-- Exposed port: 8080 (used by the API).
+- Exposed port: 8080 (used by the API).'
+
+- Has a non-root user making all changes for security purpose.
 
 - Outcome: Produces a Docker image ready to be pushed to AWS ECR and deployed to Kubernetes.
 
 # ⚙️ Jenkinsfile
 
-- Purpose: Automates the CI/CD pipeline for the Clients API.
+This Jenkinsfile defines a **full CI/CD pipeline** for the `clients-api` Go application, building, testing, scanning, and deploying it to an **EKS Kubernetes cluster**. Key features include:
 
-- Stages:
+1. **Environment & Parameters**
 
-1. Checkout: Pulls code from GitHub.
+   - Uses Jenkins-configured variables like `AWS_ACCOUNT_ID` to avoid hardcoding secrets.
+   - Parameters allow deployment to `staging` or `production`, skipping tests or security scans, and choosing `kubectl` version.
+   - Dynamic image tags using git commit SHA for traceability.
 
-2. Build: Builds the Docker image for the Go application.
+2. **Pipeline Stages**
 
-3. Push: Pushes the Docker image to AWS ECR.
+   - **Initialization**: Prints build info and sets dynamic environment variables.
+   - **Checkout**: Retrieves source code from Git and logs the last commit.
+   - **Code Quality & Linting**: Runs `gofmt`, `go vet`, and optionally `golangci-lint` to enforce Go coding standards.
+   - **Unit Tests**: Executes tests with coverage reporting and fails if coverage is below threshold.
+   - **Build Docker Image**: Builds a Docker image tagged with commit SHA, build number, and `latest`.
+   - **Security Scan**: Uses Trivy to scan Docker images for vulnerabilities.
+   - **Push to ECR**: Authenticates to AWS ECR (without hardcoded credentials), tags, and pushes the Docker image.
+   - **Update Kubernetes Manifests**: Updates deployment manifests with the new image tag.
+   - **Deploy to EKS**: Deploys to `staging` or `production` using `kubectl`, manages namespaces and secrets, sets image, and annotates deployments.
+   - **Health Check**: Ensures pods are running and optionally runs smoke tests.
+   - **Tag Release**: Tags the Git repository for production releases.
 
-4. Deploy: Applies Kubernetes manifests (kubectl apply -f k8s/) to deploy/update the application on EKS.
+3. **Post Actions & Notifications**
 
-- Outcome: Fully automates the flow from code → image → deployment, ensuring consistent and repeatable deployments.
+   - Always cleans up unused Docker images and temporary files.
+   - Sends Slack notifications for **success**, **failure**, **unstable**, or **aborted** builds.
+   - Includes retries, error handling, and manual approval for production deployments.
+
+4. **Helper Functions**
+
+   - `deployToKubernetes(environment)`: Handles EKS login, namespace creation, image pull secrets, and deployment.
+   - `notifySlack(color, title, message)`: Sends formatted Slack notifications using the Slack plugin.
